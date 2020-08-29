@@ -1,0 +1,89 @@
+---
+- name: Look for the certificate
+  stat:
+    path: "{{ certbot_etc_dir }}/live/{{ domains | first }}/cert.pem"
+  register: cert_stat
+
+- name: Ensure other files are also present
+  stat:
+    path: "{{ certbot_etc_dir }}/live/{{ domains | first }}/{{ certfile }}"
+  loop:
+    - privkey.pem
+    - chain.pem
+  when:
+    - "cert_stat.stat.exists"
+
+- name: Gather all domains listed in the cert
+  openssl_certificate_info:
+    path: "{{ certbot_etc_dir }}/live/{{ domains | first }}/cert.pem"
+  register: certificate_details
+  when:
+    - "cert_stat.stat.exists"
+
+- name: Create a list of DNS/IP entries from the certificate info
+  set_fact:
+    existing_certificate_names: >
+      {{ certificate_details.authority_cert_issuer +
+           certificate_details.subject_alt_name |
+         sort if cert_stat.stat.exists
+         else []
+      }}
+
+- name: Gather a listing of all of the desired entries for our certificate
+  set_fact:
+    requested_certificate_names: >
+      {{
+         [domain] + (requested_certificate_names | default([])) | sort
+      }}
+  loop: "{{ domains }}"
+  loop_control:
+    loop_var: domain
+
+- name: >
+    Install the certificate, or renew if the list of domains have changed,
+    or the cert is expired
+  command: >-
+    {{ certbot_cmd }} {{ certbot_args | join(" ") }} \
+    --email {{ email | default(certbot_email) | quote }} \
+    -d {{ domains | join(',') | quote }}
+  register: certbot_install_cmd
+  when:
+    - >
+      (existing_certificate_names != requested_certificate_names) or
+      certificate_details.expired
+
+- name: Look for the certificate
+  stat:
+    path: "{{ certbot_etc_dir }}/live/{{ domains | first }}/cert.pem"
+  register: cert_stat
+
+- name: Gather all domains listed in the updated cert
+  openssl_certificate_info:
+    path: "{{ certbot_etc_dir }}/live/{{ domains | first }}/cert.pem"
+  register: updated_certificate_details
+  when:
+    - "certbot_install_cmd is defined"
+    - "certbot_install_cmd.rc == 0"
+    - "cert_stat.stat.exists"
+
+- name: Create a list of DNS/IP entries from the updated certificate
+  set_fact:
+    updated_certificate_names: >
+      {{ updated_certificate_details.authority_cert_issuer +
+           updated_certificate_details.subject_alt_name |
+         sort
+      }}
+
+- name: Fail if we don't now have what we were looking for
+  fail:
+    msg: |
+      It looks like your certificate failed to update. You were looking for the
+      following domains:
+
+      {{ requested_certificate_names | join("\n") | indent 2 }}
+
+      And have:
+
+      {{ requested_certificate_names | join("\n") | indent 2 }}
+
+      With a certificate that is {% if updated_certificate_details.expired -%}not {% endif -%} expired.

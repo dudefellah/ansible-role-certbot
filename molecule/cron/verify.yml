@@ -1,0 +1,11 @@
+---
+# This is an example playbook to execute Ansible tests.
+
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Look for installed cron job
+      stat:
+        path: /etc/cron.d/certbot
+      register: certbot_st
+      failed_when: "not certbot_st.stat.exists"

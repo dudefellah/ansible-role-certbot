@@ -1,0 +1,82 @@
+---
+# defaults file for ansible-role-certbot
+#
+# I don't see a situation where thie would need to be changed, but it's no
+# trouble to use a variable, so it's a variable.
+#
+# This affects where this role will look for existing certificates in order
+# to check up-to-dateness and domain names used per cert
+certbot_etc_dir: /etc/letsencrypt
+
+# This role tries to locate the certbot bin by taking clues from your supplied
+# settings (ie. tries to use the system path or virtualenv path). If you want
+# to use a different value, or it's not working for you for some reason (please
+# file an issue!), you can explicitly set your value here and there will be no
+# guessing at where your certbot binary resides.
+certbot_cmd: null
+
+# A "global" email address for your certificates. This can be used as a fallback
+# if you don't want to set an email address for each certificate.
+certbot_email: null
+
+#
+# Certificate packages will be installed based on what's listed in the
+# certbot_packages_* values in vars/* for your platform. If this value
+# is defined, then it will be used instead of the vars/ values. You can
+# set it to empty ([]) to avoid having any packages installed at all.
+certbot_packages: null
+
+# If true, the role will install the pip package for certbot. This may be
+# a preferrable option on an older distribution so that you can ensure a
+# more recent version of certbot.
+certbot_pip_install: false
+
+# Pip will attempt to install the specified version of certbot when
+# certbot_source_version is set and certbot_from_source is true.
+# If this value is false (null, 0, "", etc), the latest version of
+# certbot will be installed.
+certbot_pip_version: null
+
+# A few extra options are available for pip install. Detailed docs
+# are available at:
+# https://docs.ansible.com/ansible/latest/modules/pip_module.html
+# Optionally set the pip virtualenv value during pip install
+certbot_pip_virtualenv: null
+
+# Optionally set the pip virtualenv command to use during pip install
+certbot_pip_virtualenv_command: null
+
+# Optionally set the python command to use when using pip/virtualenv
+certbot_pip_virtualenv_python: null
+
+# Optionally use the system-wide site_packages
+certbot_pip_virtualenv_site_packages: false
+
+# Set to true to enable auto-renewal
+certbot_auto_renew_certificates: true
+
+certbot_renew_systemd_oncalendar:
+  - "*-*-* 00"
+  - "12:00:00"
+
+# When true, a cron job will be installed for certbot in favour of systemd
+# service + timer.
+certbot_cron: false
+
+certbot_cron_schedule: "0 0/12 * * *"
+
+# Declare your certificates here. This is a list of dicts that have the
+# following structure:
+# - email: letsencrypt@me.com
+#   domains:
+#     - domain1
+#     - domain2
+#     ...
+#
+certbot_certificates: []
+
+certbot_args:
+  - certonly
+  - --standalone
+  - --noninteractive
+  - --agree-tos

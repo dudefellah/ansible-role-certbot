@@ -1,0 +1,47 @@
+---
+- name: Install EPEL on CentOS releases
+  package:
+    name: epel-release
+    state: present
+    update_cache: true
+  when:
+    - "ansible_distribution|lower in ['centos']"
+    - "not certbot_pip_install"
+
+- name: Install Certbot packages
+  package:
+    name: >
+      {{
+        (certbot_packages is not none) |
+        ternary(
+          certbot_packages,
+          (
+            lookup(
+              'vars',
+              'certbot_packages_'+ansible_distribution|lower+ansible_distribution_major_version|string,
+              default=''
+            ) |
+            ternary(
+              lookup(
+                'vars',
+                'certbot_packages_'+ansible_distribution|lower+ansible_distribution_major_version|string,
+                default=''
+              ),
+              lookup(
+                'vars',
+                'certbot_packages_'+ansible_distribution|lower
+              )
+            )
+          )
+        )
+      }}
+    state: present
+  when:
+    - "not certbot_pip_install"
+
+- name: Install cronie for CentOS systems
+  package:
+    name: cronie
+    state: present
+  when:
+    - "ansible_distribution|lower in ['centos']"

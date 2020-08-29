@@ -1,0 +1,35 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint: |
+  set -e
+  yamllint .
+  ansible-lint .
+platforms:
+  - name: certbot-molecule-centos-7-instance
+    image: "centos:centos7"
+    pre_build_image: true
+  - name: certbot-molecule-centos-8-instance
+    image: "centos:centos8"
+    pre_build_image: true
+  - name: certbot-molecule-debian-buster-instance
+    image: debian:buster-slim
+    pre_build_image: true
+  - name: certbot-molecule-debian-stretch-instance
+    image: debian:stretch-slim
+    pre_build_image: true
+  - name: certbot-molecule-ubuntu-20-04-instance
+    image: ubuntu:20.04
+    pre_build_image: true
+  - name: certbot-molecule-ubuntu-20-10-instance
+    image: ubuntu:20.10
+    pre_build_image: true
+provisioner:
+  name: ansible
+  playbooks:
+    prepare: ../resources/playbooks/prepare.yml
+verifier:
+  name: ansible
+  enabled: true

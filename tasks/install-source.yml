@@ -1,0 +1,49 @@
+---
+- name: Install certbot with pip
+  pip:
+    name: certbot
+    state: present
+    version: "{{ certbot_pip_version | default(omit) }}"
+    virtualenv: "{{ certbot_pip_virtualenv is not none | ternary(certbot_pip_virtualenv, omit) }}"
+    virtualenv_command: "{{ certbot_pip_virtualenv_command is not none | ternary(certbot_pip_virtualenv_command, omit) }}"
+    virtualenv_python: "{{ certbot_pip_virtualenv_python is not none | ternary(certbot_pip_virtualenv_python, omit) }}"
+    virtualenv_site_packages: "{{ certbot_pip_virtualenv_site_packages is not none | ternary(certbot_pip_virtualenv_site_packages, omit) }}"
+  tags:
+    - certbot_pip
+    - certbot_install
+
+# Tempted to allow only installs of systemd files for
+# ansible_service_mgr == 'systemd' hosts, but I'll leave it for now.
+# There may be some instance where someone wants to install the files without
+# using the service... maybe?
+- name: Install certbot systemd service
+  template:
+    src: certbot.service.j2
+    dest: /etc/systemd/system/certbot.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: systemctl daemon-reload
+  when:
+    - "not certbot_cron"
+
+- name: Install certbot systemd timer
+  template:
+    src: certbot.timer.j2
+    dest: /etc/systemd/system/certbot.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: systemctl daemon-reload
+  when:
+    - "not certbot_cron"
+
+- name: Install certbot cron job
+  template:
+    src: certbot.cron.j2
+    dest: /etc/cron.d/certbot
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - "certbot_cron"

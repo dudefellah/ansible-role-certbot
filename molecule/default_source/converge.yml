@@ -1,0 +1,10 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: "Include ansible-role-certbot"
+      include_role:
+        name: "ansible-role-certbot"
+      vars:
+        certbot_pip_install: true

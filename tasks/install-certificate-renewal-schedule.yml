@@ -1,0 +1,36 @@
+---
+- name: Install custom timer
+  template:
+    src: certbot.timer.j2
+    dest: /etc/systemd/system/certbot.timer
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - "ansible_service_mgr == 'systemd'"
+    - "certbot_auto_renew_certificates"
+    - "not certbot_cron"
+
+# Trigger the disabling of certbot.timer even after we've removed
+- name: Clean out custom timer
+  file:
+    path: /etc/systemd/system/certbot.timer
+    state: absent
+  notify:
+    - systemctl daemon-reload
+    - systemctl disable certbot.timer
+  when:
+    - >
+      (not certbot_auto_renew_certificates) or
+      (certbot_cron)
+
+- name: Install cron job
+  template:
+    src: certbot.cron.j2
+    dest: /etc/cron.d/certbot
+    owner: root
+    group: root
+    mode: "0644"
+  when:
+    - "certbot_auto_renew_certificates"
+    - "certbot_cron"

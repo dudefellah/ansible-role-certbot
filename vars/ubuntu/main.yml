@@ -1,0 +1,6 @@
+---
+certbot_packages_ubuntu:
+  - certbot
+
+certbot_pip_cmd_ubuntu: /usr/local/bin/certbot
+certbot_cmd_ubuntu: /usr/local/bin/certbot

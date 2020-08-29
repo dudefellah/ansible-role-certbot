@@ -1,0 +1,44 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint: |
+  set -e
+  yamllint .
+  ansible-lint .
+platforms:
+  - name: certbot-molecule-centos-7-instance
+    image: "centos:centos7"
+    command: /sbin/init
+    pre_build_image: true
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+  - name: certbot-molecule-centos-8-instance
+    image: "centos:centos8"
+    command: /sbin/init
+    pre_build_image: true
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+  - name: certbot-molecule-debian-stretch-instance
+    image: debian:stretch
+    command: /sbin/init
+    privileged: true
+    dockerfile: ../resources/playbooks/Dockerfile.j2
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+provisioner:
+  name: ansible
+  playbooks:
+    prepare: ../resources/playbooks/prepare.yml
+verifier:
+  name: ansible

@@ -1,0 +1,10 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: "Include ansible-role-certbot"
+      include_role:
+        name: "ansible-role-certbot"
+      vars:
+        certbot_auto_renew_certificates: true
+        certbot_cron: true
