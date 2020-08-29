@@ -36,7 +36,7 @@
   set_fact:
     requested_certificate_names: >
       {{
-         [domain] + (requested_certificate_names | default([])) | sort
+         [domain] + (requested_certificate_names | default([]))
       }}
   loop: "{{ domains }}"
   loop_control:
@@ -59,12 +59,12 @@
     {{ certbot_cmd }} {{ certbot_args | join(" ") }} \
     --email {{ email | default(certbot_email) | quote }} \
     -d {{ domains | join(',') | quote }} \
-    --renew-with-new-domains
+    --renew-with-new-domains --expand
   register: certbot_install_cmd
   when:
     - >
-      (existing_certificate_names != requested_certificate_names) or
-      certificate_details.expired
+      certificate_details.expired or
+      ((existing_certificate_names | sort) != (requested_certificate_names|sort))
 
 - name: Gather all domains listed in the updated cert
   openssl_certificate_info:
@@ -72,19 +72,18 @@
   register: updated_certificate_details
   when:
     - "certbot_install_cmd is defined"
-    - "not certbot_install_cmd.skipped"
+    - "('skipped' not in certbot_install_cmd) or (not certbot_install_cmd.skipped)"
     - "certbot_install_cmd.rc == 0"
 
 - name: Create a list of DNS/IP entries from the updated certificate for validation
   set_fact:
     updated_certificate_names: >
       {{ updated_certificate_details.subject_alt_name | default([]) | map('regex_replace', '^DNS:', '') |
-           (updated_certificate_details.subject_alt_name | default([])) |
          sort
       }}
   when:
     - "certbot_install_cmd is defined"
-    - "not certbot_install_cmd.skipped"
+    - "('skipped' not in certbot_install_cmd) or (not certbot_install_cmd.skipped)"
     - "certbot_install_cmd.rc == 0"
 
 - name: Fail if we don't now have what we were looking for
@@ -99,8 +98,8 @@
 
       {{ requested_certificate_names | join("\n") | indent 2 }}
 
-      With a certificate that is {% if updated_certificate_details.expired -%}not {% endif -%} expired.
+      With a certificate that is {{ 'not' if updated_certificate_details.expired }} expired.
   when:
     - "certbot_install_cmd is defined"
-    - "not certbot_install_cmd.skipped"
+    - "('skipped' not in certbot_install_cmd) or (not certbot_install_cmd.skipped)"
     - "certbot_install_cmd.rc == 0"
