@@ -63,6 +63,7 @@ certbot_renew_systemd_oncalendar:
 # service + timer.
 certbot_cron: false
 
+# The cron job schedule to pass to your cron.d file
 certbot_cron_schedule: "0 0/12 * * *"
 
 # Declare your certificates here. This is a list of dicts that have the
@@ -75,6 +76,8 @@ certbot_cron_schedule: "0 0/12 * * *"
 #
 certbot_certificates: []
 
+# These arguments will be passed to certbot for certificate installation
+# and/or renewal.
 certbot_args:
   - certonly
   - --standalone
