@@ -7,9 +7,13 @@
 - name: Ensure other files are also present
   stat:
     path: "{{ certbot_etc_dir }}/live/{{ domains | first }}/{{ certfile }}"
+  register: certfile_st
+  failed_when: "not certfile_st.stat.exists"
   loop:
     - privkey.pem
     - chain.pem
+  loop_control:
+    loop_var: certfile
   when:
     - "cert_stat.stat.exists"
 
@@ -23,8 +27,7 @@
 - name: Create a list of DNS/IP entries from the certificate info
   set_fact:
     existing_certificate_names: >
-      {{ certificate_details.authority_cert_issuer +
-           certificate_details.subject_alt_name |
+      {{ certificate_details.subject_alt_name | default([]) | map('regex_replace', '^DNS:', '') |
          sort if cert_stat.stat.exists
          else []
       }}
@@ -40,22 +43,28 @@
     loop_var: domain
 
 - name: >
-    Install the certificate, or renew if the list of domains have changed,
-    or the cert is expired
+    Install the certificate if it doesn't exist
   command: >-
     {{ certbot_cmd }} {{ certbot_args | join(" ") }} \
     --email {{ email | default(certbot_email) | quote }} \
     -d {{ domains | join(',') | quote }}
   register: certbot_install_cmd
   when:
+    - "not existing_certificate_names"
+
+- name: >
+    Renew the certificate if the existing cert domains don't match what we want
+    or the cert is expired
+  command: >-
+    {{ certbot_cmd }} {{ certbot_args | join(" ") }} \
+    --email {{ email | default(certbot_email) | quote }} \
+    -d {{ domains | join(',') | quote }} \
+    --renew-with-new-domains
+  register: certbot_install_cmd
+  when:
     - >
       (existing_certificate_names != requested_certificate_names) or
       certificate_details.expired
-
-- name: Look for the certificate
-  stat:
-    path: "{{ certbot_etc_dir }}/live/{{ domains | first }}/cert.pem"
-  register: cert_stat
 
 - name: Gather all domains listed in the updated cert
   openssl_certificate_info:
@@ -63,16 +72,20 @@
   register: updated_certificate_details
   when:
     - "certbot_install_cmd is defined"
+    - "not certbot_install_cmd.skipped"
     - "certbot_install_cmd.rc == 0"
-    - "cert_stat.stat.exists"
 
-- name: Create a list of DNS/IP entries from the updated certificate
+- name: Create a list of DNS/IP entries from the updated certificate for validation
   set_fact:
     updated_certificate_names: >
-      {{ updated_certificate_details.authority_cert_issuer +
-           updated_certificate_details.subject_alt_name |
+      {{ updated_certificate_details.subject_alt_name | default([]) | map('regex_replace', '^DNS:', '') |
+           (updated_certificate_details.subject_alt_name | default([])) |
          sort
       }}
+  when:
+    - "certbot_install_cmd is defined"
+    - "not certbot_install_cmd.skipped"
+    - "certbot_install_cmd.rc == 0"
 
 - name: Fail if we don't now have what we were looking for
   fail:
@@ -87,3 +100,7 @@
       {{ requested_certificate_names | join("\n") | indent 2 }}
 
       With a certificate that is {% if updated_certificate_details.expired -%}not {% endif -%} expired.
+  when:
+    - "certbot_install_cmd is defined"
+    - "not certbot_install_cmd.skipped"
+    - "certbot_install_cmd.rc == 0"
