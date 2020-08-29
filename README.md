@@ -21,7 +21,7 @@ None
 Role Variables
 --------------
 
-Please see the variable documentation in [main/defaults.yml](main/defaults.yml).
+Please see the variable documentation in [defaults/main.yml](defaults/main.yml).
 
 Dependencies
 ------------
