@@ -62,6 +62,7 @@
     --renew-with-new-domains --expand
   register: certbot_install_cmd
   when:
+    - "cert_stat.stat.exists"
     - >
       certificate_details.expired or
       ((existing_certificate_names | sort) != (requested_certificate_names|sort))

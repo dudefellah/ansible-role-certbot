@@ -21,7 +21,7 @@ None
 Role Variables
 --------------
 
-Please see the variable documentation in [defaults/main.yml](defaults/main.yml).
+Please see the variable documentation in [defaults/main.yml](https://github.com/dudefellah/ansible-role-certbot/blob/master/defaults/main.yml).
 
 Dependencies
 ------------

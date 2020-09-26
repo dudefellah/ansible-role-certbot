@@ -1,8 +1,6 @@
 ---
 certbot_packages_centos7:
   - certbot
-  - python2-certbot-apache
-  - python2-certbot-nginx
 
 certbot_packages_centos:
   - certbot
