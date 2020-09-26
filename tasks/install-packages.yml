@@ -45,3 +45,10 @@
     state: present
   when:
     - "ansible_distribution|lower in ['centos']"
+
+- name: Install some pip dependencies for doing openssl work in this role
+  pip:
+    name:
+      - cryptography
+      - pyopenssl
+    state: present
