@@ -16,17 +16,19 @@ single certificate request.
 Requirements
 ------------
 
-None
+This role makes use of openssl functionality, meaning it's going to want
+to install the PyOpenSSL and Cryptography pip modules.
 
 Role Variables
 --------------
 
-Please see the variable documentation in [defaults/main.yml](https://github.com/dudefellah/ansible-role-certbot/blob/master/defaults/main.yml).
+Please see the variable documentation in
+[defaults/main.yml](https://github.com/dudefellah/ansible-role-certbot/blob/master/defaults/main.yml).
 
 Dependencies
 ------------
 
-None.
+No role dependencies exist.
 
 Example Playbook
 ----------------
@@ -42,6 +44,10 @@ Installing a certificate using a pip installed certbot:
                domains:
                  - me.myhost.com
                  - myother.myhost.com
+             - email: otherme@myotherhost.com
+               domains:
+                 - myotherhost.com
+                 - myother.myotherhost.com
 
 License
 -------
