@@ -1,4 +1,6 @@
-Role Name
+[![pipeline status](https://gitlab.com/dudefellah/ansible-role-certbot/badges/master/pipeline.svg)](https://gitlab.com/dudefellah/ansible-role-certbot/-/commits/master)
+
+Certbot
 =========
 
 This is yet another certbot role for Ansible. I created it since the other
