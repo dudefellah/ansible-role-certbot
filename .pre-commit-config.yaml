@@ -21,5 +21,11 @@ repos:
       args: [
         "--exclude=molecule/resources",
         "--exclude=roles",
-        "--exclude=.travis.yml"
+        "--exclude=.gitlab-ci.yml",
+        "."
       ]
+
+- repo: https://gitlab.com/devopshq/gitlab-ci-linter
+  rev: v1.0.1
+  hooks:
+    - id: gitlab-ci-linter
