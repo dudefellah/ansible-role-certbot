@@ -59,6 +59,6 @@ platforms:
 provisioner:
   name: ansible
   playbooks:
-    prepare: prepare.yml
+    prepare: ../resources/playbooks/prepare.yml
 verifier:
   name: testinfra

@@ -31,3 +31,25 @@
         yum -y install epel-release
         yum -y install python-pip python-setuptools python-virtualenv
         {% endif %}
+
+    - name: Do setup module now that we have Python installed
+      setup:
+
+    - name: Install epel on CentOS 7
+      package:
+        name:
+          - "epel-release"
+        state: present
+        update_cache: true
+      when:
+        - "ansible_distribution == 'CentOS'"
+        - "ansible_distribution_major_version|int == 7"
+
+    - name: Install python-pip on CentOS 7
+      package:
+        name:
+          - "python-pip"
+        state: present
+      when:
+        - "ansible_distribution == 'CentOS'"
+        - "ansible_distribution_major_version|int == 7"
