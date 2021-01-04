@@ -2,7 +2,7 @@
 - name: Install custom timer
   template:
     src: certbot.timer.j2
-    dest: /etc/systemd/system/certbot.timer
+    dest: "/etc/systemd/system/{{ certbot_renew_systemd_timer_name }}.timer"
     owner: root
     group: root
     mode: "0644"
@@ -14,7 +14,7 @@
 # Trigger the disabling of certbot.timer even after we've removed
 - name: Clean out custom timer
   file:
-    path: /etc/systemd/system/certbot.timer
+    dest: "/etc/systemd/system/{{ certbot_renew_systemd_timer_name }}.timer"
     state: absent
   notify:
     - systemctl daemon-reload

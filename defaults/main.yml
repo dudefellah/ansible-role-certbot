@@ -55,6 +55,10 @@ certbot_pip_virtualenv_site_packages: false
 # Set to true to enable auto-renewal
 certbot_auto_renew_certificates: true
 
+# Set the name of the certbot renewal service name. In case the default
+# package value changes, or it varies between distributions.
+certbot_renew_systemd_timer_name: certbot-renew
+
 certbot_renew_systemd_oncalendar:
   - "*-*-* 00"
   - "12:00:00"
