@@ -5,7 +5,10 @@
     # Hacky little raw step to get all dependencies installed all at once
     - name: Install python
       raw: |-
-        {% if inventory_hostname in ['certbot-molecule-debian-buster-instance', 'certbot-molecule-ubuntu-20-04-instance', 'certbot-molecule-ubuntu-20-10-instance'] %}
+        {% if inventory_hostname in [
+            'certbot-molecule-ubuntu-20-04-instance',
+            'certbot-molecule-ubuntu-20-10-instance'
+           ] %}
         apt-get update && \
           DEBIAN_FRONTEND=noninteractive \
           apt-get -y install python3 \
@@ -15,7 +18,8 @@
             sudo \
             systemd \
             virtualenv >> /tmp/apt.log 2>&1
-        {% elif inventory_hostname.endswith('debian-stretch-instance') %}
+        {% elif inventory_hostname.endswith('debian-stretch-instance') or
+                inventory_hostname.endswith('debian-buster-instance') %}
         apt-get update && \
           DEBIAN_FRONTEND=noninteractive \
           apt-get -y install python python3 \
