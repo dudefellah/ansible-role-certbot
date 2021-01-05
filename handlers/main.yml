@@ -9,6 +9,7 @@
   systemd:
     name: certbot.timer
     enabled: true
+    state: started
   listen: systemctl enable certbot.timer
   when:
     - "ansible_service_mgr == 'systemd'"
@@ -17,6 +18,7 @@
   systemd:
     name: certbot.timer
     enabled: false
+    state: stopped
   listen: systemctl disable certbot.timer
   when:
     - "ansible_service_mgr == 'systemd'"
