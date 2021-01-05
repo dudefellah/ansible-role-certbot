@@ -6,6 +6,9 @@
     owner: root
     group: root
     mode: "0644"
+  notify:
+    - systemctl daemon-reload
+    - systemctl enable certbot.timer
   when:
     - "ansible_service_mgr == 'systemd'"
     - "certbot_auto_renew_certificates"
