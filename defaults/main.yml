@@ -57,11 +57,11 @@ certbot_auto_renew_certificates: true
 
 # Set the name of the certbot renewal service name. In case the default
 # package value changes, or it varies between distributions.
-certbot_renew_systemd_timer_name: certbot-renew
+certbot_renew_systemd_name: certbot-renew
 
-certbot_renew_systemd_oncalendar:
-  - "*-*-* 00"
-  - "12:00:00"
+# Sets the systemd timer OnCalendar value. Default is to run
+# at the beginning of every month.
+certbot_renew_systemd_oncalendar: "*-*-01 00:00:00"
 
 # When true, a cron job will be installed for certbot in favour of systemd
 # service + timer.

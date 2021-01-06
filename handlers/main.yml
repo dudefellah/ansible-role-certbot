@@ -4,10 +4,12 @@
   systemd:
     daemon_reload: true
   listen: systemctl daemon-reload
+  when:
+    - "ansible_service_mgr == 'systemd'"
 
 - name: Enable certbot.timer service with systemd
   systemd:
-    name: certbot.timer
+    name: "{{ certbot_renew_systemd_name }}.timer"
     enabled: true
     state: started
   listen: systemctl enable certbot.timer
@@ -16,7 +18,7 @@
 
 - name: Disable certbot.timer service with systemd
   systemd:
-    name: certbot.timer
+    name: "{{ certbot_renew_systemd_name }}.timer"
     enabled: false
     state: stopped
   listen: systemctl disable certbot.timer

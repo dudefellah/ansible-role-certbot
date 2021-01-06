@@ -3,9 +3,10 @@
 Description=Certbot Renew Timer Schedule
 
 [Timer]
-OnCalendar={{ certbot_renew_systemd_oncalendar | join('.') }}
+OnCalendar={{ certbot_renew_systemd_oncalendar }}
 RandomizedDelaySec={{ certbot_renew_randomized_delay_sec | default(43200) }}
 Persistent=true
+Unit={{ certbot_renew_systemd_name }}.service
 
 [Install]
 WantedBy=timers.target

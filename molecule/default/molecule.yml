@@ -10,7 +10,7 @@ lint: |
 platforms:
   - name: certbot-molecule-centos-7-instance
     image: "centos:centos7"
-    pre_build_image: true
+    command: /sbin/init
     tmpfs:
       - /run
       - /tmp
@@ -18,44 +18,20 @@ platforms:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
   - name: certbot-molecule-centos-8-instance
     image: "centos:centos8"
-    pre_build_image: true
+    command: /sbin/init
     tmpfs:
      - /run
      - /tmp
     volumes:
      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-  - name: certbot-molecule-debian-buster-instance
-    image: debian:buster-slim
-    pre_build_image: true
-    tmpfs:
-      - /run
-      - /tmp
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+#  - name: certbot-molecule-debian-buster-instance
+#    image: debian:buster
   - name: certbot-molecule-debian-stretch-instance
-    image: debian:stretch-slim
-    pre_build_image: true
-    tmpfs:
-      - /run
-      - /tmp
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    image: debian:stretch
   - name: certbot-molecule-ubuntu-20-04-instance
     image: ubuntu:20.04
-    pre_build_image: true
-    tmpfs:
-      - /run
-      - /tmp
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
   - name: certbot-molecule-ubuntu-20-10-instance
     image: ubuntu:20.10
-    pre_build_image: true
-    tmpfs:
-      - /run
-      - /tmp
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
 provisioner:
   name: ansible
   playbooks:
