@@ -5,9 +5,10 @@
     state: present
     version: "{{ certbot_pip_version | default(omit) }}"
     virtualenv: "{{ certbot_pip_virtualenv is not none | ternary(certbot_pip_virtualenv, omit) }}"
-    virtualenv_command: "{{ certbot_pip_virtualenv_command is not none | ternary(certbot_pip_virtualenv_command, omit) }}"
-    virtualenv_python: "{{ certbot_pip_virtualenv_python is not none | ternary(certbot_pip_virtualenv_python, omit) }}"
+    virtualenv_command: "{{ certbot_pip_virtualenv_command | default(omit) }}"
+    virtualenv_python: "{{ certbot_pip_virtualenv_python | default(omit) }}"
     virtualenv_site_packages: "{{ certbot_pip_virtualenv_site_packages is not none | ternary(certbot_pip_virtualenv_site_packages, omit) }}"
+    executable: "{{ certbot_pip_executable | default(omit) }}"
   tags:
     - certbot_pip
     - certbot_install

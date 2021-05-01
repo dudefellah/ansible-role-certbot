@@ -19,12 +19,14 @@ certbot_cmd: null
 # if you don't want to set an email address for each certificate.
 certbot_email: null
 
-#
 # Certificate packages will be installed based on what's listed in the
 # certbot_packages_* values in vars/* for your platform. If this value
 # is defined, then it will be used instead of the vars/ values. You can
 # set it to empty ([]) to avoid having any packages installed at all.
 certbot_packages: null
+
+# Set to configure the pip executable to use when using pip internally
+certbot_pip_executable: null
 
 # If true, the role will install the pip package for certbot. This may be
 # a preferrable option on an older distribution so that you can ensure a
@@ -62,6 +64,10 @@ certbot_renew_systemd_name: certbot-renew
 # Sets the systemd timer OnCalendar value. Default is to run
 # at the beginning of every month.
 certbot_renew_systemd_oncalendar: "*-*-01 00:00:00"
+
+certbot_pre_hook: null
+
+certbot_post_hook: null
 
 # When true, a cron job will be installed for certbot in favour of systemd
 # service + timer.

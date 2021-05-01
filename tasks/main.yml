@@ -84,7 +84,7 @@
 - name: Install certificate
   include_tasks: install-certificate.yml
   vars:
-    email: "{{ certificate.email }}"
+    email: "{{ certificate.email | default(certbot_email) }}"
     domains: "{{ certificate.domains }}"
   tags:
     - certbot_certificate

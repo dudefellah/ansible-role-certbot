@@ -52,4 +52,5 @@
       - cryptography
       - pyopenssl
     state: present
+    executable: "{{ certbot_pip_executable | default(omit) }}"
   changed_when: false

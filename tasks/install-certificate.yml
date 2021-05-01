@@ -32,30 +32,42 @@
          else []
       }}
 
-- name: >
-    Install the certificate if it doesn't exist
-  command: >-
-    {{ certbot_cmd }} {{ certbot_args | join(" ") }} \
-    --email {{ email | default(certbot_email) | quote }} \
-    -d {{ domains | join(',') | quote }}
-  register: certbot_install_cmd
-  when:
-    - "not existing_certificate_names"
+- block:
+    - name: Perform pre-certificate retrieval hook
+      shell: "{{ certbot_pre_hook }}"
+      when:
+        - "certbot_pre_hook is not none"
 
-- name: >
-    Renew the certificate if the existing cert domains don't match what we want
-    or the cert is expired
-  command: >-
-    {{ certbot_cmd }} {{ certbot_args | join(" ") }} \
-    --email {{ email | default(certbot_email) | quote }} \
-    -d {{ domains | join(',') | quote }} \
-    --renew-with-new-domains --expand
-  register: certbot_install_cmd
-  when:
-    - "cert_stat.stat.exists"
-    - >
-      certificate_details.expired or
-      ((existing_certificate_names | sort) != (domains|sort))
+    - name: >
+        Install the certificate if it doesn't exist
+      command: >-
+        {{ certbot_cmd }} {{ certbot_args | join(" ") }} \
+        --email {{ email | default(certbot_email) | quote }} \
+        -d {{ domains | join(',') | quote }}
+      register: certbot_install_cmd
+      when:
+        - "not existing_certificate_names"
+
+    - name: >
+        Renew the certificate if the existing cert domains don't match what we want
+        or the cert is expired
+      command: >-
+        {{ certbot_cmd }} {{ certbot_args | join(" ") }} \
+        --email {{ email | default(certbot_email) | quote }} \
+        -d {{ domains | join(',') | quote }} \
+        --renew-with-new-domains --expand
+      register: certbot_install_cmd
+      when:
+        - "cert_stat.stat.exists"
+        - >
+          certificate_details.expired or
+          ((existing_certificate_names | sort) != (domains|sort))
+
+  always:
+    - name: Run post-certificate retrieval hook
+      shell: "{{ certbot_post_hook }}"
+      when:
+        - "certbot_post_hook is not none"
 
 - name: Gather all domains listed in the updated cert
   openssl_certificate_info:
