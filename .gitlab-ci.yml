@@ -4,7 +4,7 @@ stages:
   - publish
 
 include:
-  - remote: "https://gitlab.com/dudefellah/ci-templates/-/raw/master/ansible/Molecule.Docker.gitlab-ci.yml"
+  - remote: "https://gitlab.com/dudefellah/ci-templates/-/raw/master/ansible/Molecule.gitlab-ci.yml"
   - remote: "https://gitlab.com/dudefellah/ci-templates/-/raw/master/ansible/Galaxy.gitlab-ci.yml"
 
 molecule:
