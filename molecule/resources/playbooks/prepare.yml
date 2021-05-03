@@ -34,9 +34,20 @@
             systemd \
             sudo >> /tmp/apt.log 2>&1
         {% elif inventory_hostname.endswith('centos-8-instance') %}
-        yum -y install python3-pip python3-setuptools python3-virtualenv >> /tmp/yum.log 2>&1
+        yum -y install cronie python3-pip python3-setuptools python3-virtualenv >> /tmp/yum.log 2>&1
         {% elif inventory_hostname.endswith('centos-7-instance') %}
         yum -y install epel-release >> /tmp/yum.log 2>&1
         yum -y update >> /tmp/yum.log 2>&1
-        yum -y install python-pip python-setuptools python-virtualenv >> /tmp/yum.log 2>&1
+        yum -y install cronie python-pip python-setuptools python-virtualenv >> /tmp/yum.log 2>&1
         {% endif %}
+
+- hosts: all
+  gather_facts: true
+  tasks:
+    - name: Update pip
+      pip:
+        name: pip
+        extra_args: --upgrade
+      when:
+        - "ansible_distribution == 'CentOS'"
+        - "ansible_distribution_major_version|int == 8"

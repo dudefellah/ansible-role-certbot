@@ -8,3 +8,4 @@
         name: "ansible-role-certbot"
       vars:
         certbot_pip_install: true
+        certbot_pip_executable: /usr/bin/pip3

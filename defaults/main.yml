@@ -54,6 +54,16 @@ certbot_pip_virtualenv_python: null
 # Optionally use the system-wide site_packages
 certbot_pip_virtualenv_site_packages: false
 
+# Run this hook before grabbing a certificate through this role.
+# Runs in a shell, so it can be any command you'd like to run in that
+# environment.
+certbot_pre_hook: null
+
+# Run this hook after grabbing a certificate through this role.
+# Runs in a shell, so it can be any command you'd like to run in that
+# environment.
+certbot_post_hook: null
+
 # Set to true to enable auto-renewal
 certbot_auto_renew_certificates: true
 
@@ -65,9 +75,13 @@ certbot_renew_systemd_name: certbot-renew
 # at the beginning of every month.
 certbot_renew_systemd_oncalendar: "*-*-01 00:00:00"
 
-certbot_pre_hook: null
+# Run this hook before renewing a certificate through this a systemd timer
+# or cron job.
+certbot_renew_pre_hook: null
 
-certbot_post_hook: null
+# Run this hook after renewing a certificate through this a systemd timer
+# or cron job.
+certbot_renew_post_hook: null
 
 # When true, a cron job will be installed for certbot in favour of systemd
 # service + timer.

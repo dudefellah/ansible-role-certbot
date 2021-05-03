@@ -8,3 +8,4 @@
       vars:
         certbot_auto_renew_certificates: true
         certbot_cron: true
+        certbot_pip_executable: /usr/bin/pip3

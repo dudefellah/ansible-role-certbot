@@ -1,4 +1,17 @@
 ---
+- name: Complain when attempting to install through pip on CentOS 7
+  fail:
+    msg: >-
+      Using pip to do a standard certbot install on CentOS 7 isn't really
+      supported by this role. This is due to the default python2 interpreter
+      being too old for certbot. You can get around this by specifying a custom
+      pip executable with `certbot_pip_executable`. It will just be assumed that
+      you've picked a better pip executable (ie. pip3) that will work.
+  when:
+    - "ansible_distribution == 'CentOS'"
+    - "ansible_distribution_major_version|int == 7"
+    - "certbot_pip_executable is none"
+
 # tasks file for ansible-role-certbot
 - name: Load platform variables
   include_vars: "{{ filename }}"

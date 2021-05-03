@@ -1,2 +1,2 @@
 # {{ ansible_managed }}
-{{ certbot_cron_schedule }} root {{ certbot_cmd }} -q renew
+{{ certbot_cron_schedule }} root {{ certbot_cmd }} {% if certbot_renew_pre_hook is not none %}--pre-hook '{{ certbot_renew_pre_hook }}'"{%- endif %} {% if certbot_renew_pre_hook is not none %}--post-hook '{{ certbot_renew_post_hook }}'"{%- endif %} -q renew
