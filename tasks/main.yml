@@ -94,6 +94,14 @@
   tags:
     - certbot_bin
 
+- name: Install the sysconfig template
+  template:
+    src: "certbot.sysconfig.j2"
+    dest: "{{ certbot_sysconfig_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+
 - name: Install certificate
   include_tasks: install-certificate.yml
   vars:

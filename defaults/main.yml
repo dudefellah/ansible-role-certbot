@@ -54,6 +54,12 @@ certbot_pip_virtualenv_python: null
 # Optionally use the system-wide site_packages
 certbot_pip_virtualenv_site_packages: false
 
+# Destination of the certbot sysconfig file.
+# When null or empty, no sysconfig file will be installed. This can
+# be changed to a 'default' path (ie. /etc/default/certbot) on
+# Debian variants that mainly use that path structure over /etc/sysconfig
+certbot_sysconfig_path: /etc/sysconfig/certbot
+
 # Run this hook before grabbing a certificate through this role.
 # Runs in a shell, so it can be any command you'd like to run in that
 # environment.
@@ -63,6 +69,10 @@ certbot_pre_hook: null
 # Runs in a shell, so it can be any command you'd like to run in that
 # environment.
 certbot_post_hook: null
+
+# Run this hook only after a successful renewal (unlike certbot_post_hook
+# which runs regardless of whether or not the renewal was successful)
+certbot_deploy_hook: null
 
 # Set to true to enable auto-renewal
 certbot_auto_renew_certificates: true
@@ -82,6 +92,14 @@ certbot_renew_pre_hook: null
 # Run this hook after renewing a certificate through this a systemd timer
 # or cron job.
 certbot_renew_post_hook: null
+
+# Extra args to be passed to certbot during renew. Works just like
+# `certbot_args` but will only be applied to the renewal job.
+# Eg.
+#  - --webroot
+#  - -w
+#  - /var/www/html
+certbot_renew_args: []
 
 # When true, a cron job will be installed for certbot in favour of systemd
 # service + timer.
