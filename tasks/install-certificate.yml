@@ -41,7 +41,7 @@
     - name: >
         Install the certificate if it doesn't exist
       command: >-
-        {{ certbot_cmd }} {{ certbot_args | join(" ") }} \
+        {{ certbot_cmd }} certonly {{ certbot_args | join(" ") }} \
         --email {{ email | default(certbot_email) | quote }} \
         -d {{ domains | join(',') | quote }}
       register: certbot_install_cmd
@@ -52,7 +52,7 @@
         Renew the certificate if the existing cert domains don't match what we want
         or the cert is expired
       command: >-
-        {{ certbot_cmd }} {{ certbot_args | join(" ") }} \
+        {{ certbot_cmd }} certonly {{ certbot_args | join(" ") }} \
         --email {{ email | default(certbot_email) | quote }} \
         -d {{ domains | join(',') | quote }} \
         --renew-with-new-domains --expand
