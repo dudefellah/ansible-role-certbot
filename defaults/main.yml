@@ -121,7 +121,6 @@ certbot_certificates: []
 # These arguments will be passed to certbot for certificate installation
 # and/or renewal.
 certbot_args:
-  - certonly
   - --standalone
   - --noninteractive
   - --agree-tos
