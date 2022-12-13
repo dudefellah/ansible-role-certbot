@@ -1,0 +1,78 @@
+---
+# yamllint disable rule:line-length
+- name: Get the list of installable packages
+  ansible.builtin.set_fact:
+    _certbot_packages: >-
+      {%- if certbot_packages -%}
+      {%- elif (
+        (ansible_distribution in __certbot_packages)
+        and (ansible_distribution_major_version | int in __certbot_packages[ansible_distribution])
+      ) -%}
+      {{ __certbot_packages[ansible_distribution][ansible_distribution_major_version | int] }}
+      {%- elif (
+        (ansible_distribution in __certbot_packages)
+        and ('default' in __certbot_packages[ansible_distribution])
+      ) -%}
+      {{ __certbot_packages[ansible_distribution]['default'] }}
+      {%- endif -%}
+  tags:
+    - certbot
+
+- name: Set the list of installable pip modules
+  ansible.builtin.set_fact:
+    _certbot_pip_modules: >-
+      {%- if certbot_pip_modules is not none -%}
+      {{ certbot_pip_modules }}
+      {%- elif (
+        (ansible_distribution in __certbot_pip_modules)
+        and (ansible_distribution_major_version | int in __certbot_pip_modules[ansible_distribution])
+      ) -%}
+      {{ __certbot_pip_modules[ansible_distribution][ansible_distribution_major_version | int] }}
+      {%- elif (
+        (ansible_distribution in __certbot_pip_modules)
+        and ('default' in __certbot_pip_modules[ansible_distribution])
+      ) -%}
+      {{ __certbot_pip_modules[ansible_distribution]['default'] }}
+      {%- endif -%}
+  tags:
+    - certbot
+
+# Inexact guesswork at finding the certbot binary.
+# virtualenv is virtualenv path + '/bin/certbot'
+# no-virtualenv pip installs are /usr/local/bin/certbot
+# everything else is /usr/bin/certbot which should be what is used by the distro
+# package repo
+- name: Set a single certbot command value based on the selected values
+  ansible.builtin.set_fact:
+    _certbot_cmd: >-
+      {{ (certbot_pip_install and (certbot_pip_virtualenv is not none) and (certbot_pip_virtualenv | length > 0)) |
+         ternary(
+           certbot_pip_virtualenv | string + '/bin/certbot',
+           (
+             (certbot_pip_install and (not certbot_pip_virtualenv)) |
+             ternary(
+              '/usr/local/bin/certbot',
+              '/usr/bin/certbot',
+             )
+           )
+         )
+       }}
+  when:
+    - "certbot_cmd is none"
+  tags:
+    - certbot
+    - certbot_bin
+
+- name: Set the default certbot_sysconfig_path
+  ansible.builtin.set_fact:
+    _certbot_sysconfig_path: >-
+      {%- if certbot_sysconfig_path is not none %}
+      {{ certbot_sysconfig_path }}
+      {%- elif ansible_os_family == 'RedHat' -%}
+      /etc/sysconfig/certbot
+      {%- elif ansible_os_family == 'Debian' -%}
+      /etc/default/certbot
+      {% endif -%}
+  tags:
+    - certbot
+# yamllint enable rule:line-length

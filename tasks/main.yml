@@ -1,120 +1,120 @@
 ---
-- name: Complain when attempting to install through pip on CentOS 7
-  fail:
-    msg: >-
-      Using pip to do a standard certbot install on CentOS 7 isn't really
-      supported by this role. This is due to the default python2 interpreter
-      being too old for certbot. You can get around this by specifying a custom
-      pip executable with `certbot_pip_executable`. It will just be assumed that
-      you've picked a better pip executable (ie. pip3) that will work.
-  when:
-    - "ansible_distribution == 'CentOS'"
-    - "ansible_distribution_major_version|int == 7"
-    - "certbot_pip_executable is none"
-    - "certbot_pip_install|bool"
-
-# tasks file for ansible-role-certbot
-- name: Load platform variables
-  include_vars: "{{ filename }}"
-  vars:
-    vars_files:
-      files:
-        - "{{ role_path }}/vars/{{ ansible_distribution | lower }}/\
-          {{ ansible_distribution_major_version }}.yml"
-        - "{{ role_path }}/vars/{{ ansible_distribution | lower }}/\
-          main.yml"
-        - "{{ role_path }}/vars/{{ ansible_os_family | lower }}/\
-          main.yml"
-        - "{{ role_path }}/vars/main.yml"
-  loop: "{{ q('first_found', vars_files, errors='ignore') }}"
-  loop_control:
-    loop_var: filename
-
-- name: Load platform dependencies
-  vars:
-    tasks:
-      files:
-        - "{{ role_path }}/tasks/dependencies/\
-          {{ ansible_distribution | lower }}/\
-          {{ ansible_distribution_major_version }}.yml"
-        - "{{ role_path }}/tasks/dependencies/\
-          {{ ansible_distribution | lower }}/\
-          main.yml"
-        - "{{ role_path }}/tasks/dependencies/\
-          {{ ansible_os_family | lower }}.yml"
-        - "{{ role_path }}/tasks/dependencies/main.yml"
-  include_tasks: "{{ filename }}"
-  loop: "{{ q('first_found', tasks, errors='ignore') }}"
-  loop_control:
-    loop_var: filename
-
-# Inexact guesswork at finding the certbot binary.
-# virtualenv is virtualenv path + '/bin/certbot'
-# no-virtualenv pip installs are /usr/local/bin/certbot
-# everything else is /usr/bin/certbot which should be what is used by the distro
-# package repo
-- name: Set a single certbot command value based on the selected values
-  set_fact:
-    certbot_cmd: >-
-      {{ (certbot_pip_install and (certbot_pip_virtualenv is not none) and (certbot_pip_virtualenv|length > 0)) |
-         ternary(
-           certbot_pip_virtualenv|string + '/bin/certbot',
-           (
-             (certbot_pip_install and (not certbot_pip_virtualenv)) |
-             ternary(
-              '/usr/local/bin/certbot',
-              '/usr/bin/certbot',
-             )
-           )
-         )
-       }}
+# tasks file for dudefellah.certbot
+- name: Gather role facts
+  ansible.builtin.include_tasks: __c_gather_role_facts.yml
   tags:
-    - certbot_bin
-  when:
-    - "certbot_cmd is none"
+    - certbot
 
-- name: Install packages
-  include_tasks: install-packages.yml
-  tags:
-    - certbot_package
-    - certbot_install
+- name: Fail if we haven't gotten a usable certbot command
+  ansible.builtin.fail:
+    msg: "No appropriate certbot cmd specified and/or found"
   when:
-    - "not certbot_pip_install"
-
-- name: Install certbot from source
-  include_tasks: install-source.yml
+    - "_certbot_cmd is none"
   tags:
-    - certbot_pip
-    - certbot_install
+    - certbot
+
+- name: Install EPEL release
+  ansible.builtin.package:
+    name: epel-release
+    state: present
+  when:
+    - "ansible_os_family == 'RedHat'"
+    - "certbot_el_install_epel|bool"
+  tags:
+    - certbot
+
+- name: Install dependency packages
+  ansible.builtin.package:
+    name: "{{ _certbot_packages }}"
+    state: present
+  tags:
+    - certbot
+
+- name: Install PIP dependencies with the specified pip executable
+  ansible.builtin.pip:
+    name: "{{ _certbot_pip_modules }}"
+    state: present
+    executable: "{{ certbot_pip_executable | default(omit) }}"
   when:
     - "certbot_pip_install"
-
-- name: Test that we actually got the correct cerbot bin path
-  stat:
-    path: "{{ certbot_cmd }}"
+    - "_certbot_pip_modules is not none"
+    - >-
+      (certbot_pip_virtualenv is none) or (certbot_pip_virtualenv|length == 0)
   tags:
-    - certbot_bin
+    - certbot
 
-- name: Install the sysconfig template
-  template:
-    src: "certbot.sysconfig.j2"
-    dest: "{{ certbot_sysconfig_path }}"
+- name: Install PIP dependencies from virtualenv
+  ansible.builtin.pip:
+    name: "{{ _certbot_pip_modules }}"
+    state: present
+    virtualenv: "{{ certbot_pip_virtualenv | default(omit) }}"
+    virtualenv_command: >-
+      {{ certbot_pip_virtualenv_command | default(omit) }}
+    virtualenv_python: >-
+      {{ certbot_pip_virtualenv is not none
+         | bool
+         | ternary(certbot_pip_virtualenv_python, omit) }}
+    virtualenv_site_packages: >-
+      {{ certbot_pip_virtualenv is not none
+         | bool
+         | ternary(certbot_pip_virtualenv_site_packages, omit) }}
+  when:
+    - "certbot_pip_install"
+    - "_certbot_pip_modules is not none"
+    - "certbot_pip_virtualenv is not none"
+    - "certbot_pip_virtualenv|length > 0"
+  tags:
+    - certbot
+
+- name: Install the environment/defaults file
+  ansible.builtin.template:
+    src: certbot.sysconfig.j2
+    dest: "{{ _certbot_sysconfig_path }}"
     owner: root
     group: root
     mode: "0644"
-
-- name: Install certificate
-  include_tasks: install-certificate.yml
-  vars:
-    email: "{{ certificate.email | default(certbot_email) }}"
-    domains: "{{ certificate.domains }}"
   tags:
-    - certbot_certificate
+    - certbot
+
+- name: Install the systmed service
+  ansible.builtin.template:
+    src: certbot.service.j2
+    dest: >-
+      {{ certbot_renew_systemd_service_dir }}/\
+      {{ certbot_renew_systemd_name }}.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - systemctl daemon-reload
+  when:
+    - "certbot_systemd_service_path is not none"
+  tags:
+    - molecule-notest
+    - certbot
+
+- name: Install the systemd timer
+  ansible.builtin.template:
+    src: certbot.timer.j2
+    dest: >-
+      {{ certbot_renew_systemd_service_dir }}/\
+      {{ certbot_renew_systemd_name }}.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - systemctl daemon-reload
+  when:
+    - "certbot_systemd_service_path is not none"
+    - "certbot_systemd_timer_path is not none"
+  tags:
+    - molecule-notest
+    - certbot
+
+- name: Install defined certificates
+  include_tasks: __c_install_certificate.yml
   loop: "{{ certbot_certificates }}"
   loop_control:
-    loop_var: certificate
-
-- name: Configure certbot renewal
-  include_tasks: install-certificate-renewal-schedule.yml
+    loop_var: __c_certificate
   tags:
-    - certbot_renewal
+    - certbot

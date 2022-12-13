@@ -6,7 +6,8 @@ Documentation=https://letsencrypt.readthedocs.io/en/latest/
 
 [Service]
 Type=oneshot
-Environment="CERTBOT_PRE_HOOK={% if certbot_renew_pre_hook is not none %}--pre-hook '{{ certbot_renew_pre_hook }}'{% endif %}"
-Environment="CERTBOT_POST_HOOK={% if certbot_renew_pre_hook is not none %}--post-hook '{{ certbot_renew_post_hook }}'{% endif %}"
-ExecStart={{ certbot_cmd }} $CERTBOT_PRE_HOOK $CERTBOT_POST_HOOK -q renew
+Environment=PRE_HOOK=
+Environment=POST_HOOK=
+EnvironmentFile=-{{ _certbot_sysconfig_path }}
+ExecStart={{ _certbot_cmd }} $PRE_HOOK $POST_HOOK -q renew
 PrivateTmp=true

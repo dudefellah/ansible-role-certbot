@@ -3,38 +3,16 @@ dependency:
   name: galaxy
 driver:
   name: docker
-lint: |
-  set -e
-  yamllint .
-  ansible-lint .
 platforms:
-  - name: certbot-molecule-centos-7-instance
-    image: "centos:centos7"
-    command: /sbin/init
-    tmpfs:
-      - /run
-      - /tmp
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-  - name: certbot-molecule-centos-8-instance
-    image: "centos:centos8"
-    command: /sbin/init
-    tmpfs:
-     - /run
-     - /tmp
-    volumes:
-     - /sys/fs/cgroup:/sys/fs/cgroup:ro
-#  - name: certbot-molecule-debian-buster-instance
-#    image: debian:buster
-  - name: certbot-molecule-debian-stretch-instance
-    image: debian:stretch
-  - name: certbot-molecule-ubuntu-20-04-instance
-    image: ubuntu:20.04
-  - name: certbot-molecule-ubuntu-20-10-instance
-    image: ubuntu:20.10
+  - name: dudefellah.certbot-centos8-instance
+    image: quay.io/centos/centos:stream8
 provisioner:
   name: ansible
-  playbooks:
-    prepare: ../resources/playbooks/prepare.yml
+  options:
+    tags: certbot,molecule-converge-test
+  inventory:
+    group_vars:
+      all:
+        certbot_el_install_epel: true
 verifier:
-  name: testinfra
+  name: ansible

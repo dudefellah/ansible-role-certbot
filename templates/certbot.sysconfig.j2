@@ -1,3 +1,4 @@
+# {{ ansible_managed }}
 ## NOTE ##
 # If a hook is set here then it will be used for all
 # certificates and will override any per certificate
@@ -14,7 +15,7 @@
 #
 # An example to stop the MTA before updating certs would be
 # PRE_HOOK="--pre-hook 'systemctl stop postfix'"
-PRE_HOOK="{%- if certbot_pre_hook -%}--pre-hook {{ certbot_pre_hook | quote }}{%- endif -%}"
+PRE_HOOK="{%- if certbot_renew_pre_hook -%}--pre-hook {{ certbot_renew_pre_hook | quote }}{%- endif -%}"
 
 # Command to be run in a shell after attempting to
 # obtain/renew certificates. Can be used to deploy
@@ -26,7 +27,7 @@ PRE_HOOK="{%- if certbot_pre_hook -%}--pre-hook {{ certbot_pre_hook | quote }}{%
 #
 # An example to restart httpd would be:
 # POST_HOOK="--post-hook 'systemctl restart httpd'"
-POST_HOOK="{%- if certbot_post_hook -%}--post-hook {{ certbot_post_hook | quote }}{%- endif -%}"
+POST_HOOK="{%- if certbot_renew_post_hook -%}--post-hook {{ certbot_renew_post_hook | quote }}{%- endif -%}"
 
 # Command to be run in a shell once for each
 # successfully renewed certificate. For this command,
@@ -37,11 +38,11 @@ POST_HOOK="{%- if certbot_post_hook -%}--post-hook {{ certbot_post_hook | quote 
 #
 # An example to run a script to alert each cert would be:
 # DEPLOY_HOOK="--deploy-hook /usr/local/bin/cert-notifier.sh"
-DEPLOY_HOOK="{%- if certbot_deploy_hook -%}--deploy-hook {{ certbot_deploy_hook | quote }}{%- endif -%}"
+DEPLOY_HOOK="{%- if certbot_renew_deploy_hook -%}--deploy-hook {{ certbot_renew_deploy_hook | quote }}{%- endif -%}"
 
 # Any other misc arguments for the renewal
 # See certbot -h renew for full list
 #
 # An example to force renewal for certificates not due yet
 # CERTBOT_ARGS="--force-renewal"
-CERTBOT_ARGS="{{ certbot_args | default([]) | join(" ") }}"
+CERTBOT_ARGS="{{ certbot_renew_args | default([]) | join(" ") }}"

@@ -3,22 +3,8 @@
   hosts: all
   gather_facts: true
   tasks:
-    - name: Set the sysconfig path for Debian systems
-      set_fact:
-        certbot_sysconfig_path: /etc/default/certbot
-      when:
-        - "ansible_distribution in ['Debian', 'Ubuntu']"
-
-    - name: "Include ansible-role-certbot"
-      include_role:
+    - name: "Include certbot"
+      ansible.builtin.include_role:
         name: "ansible-role-certbot"
-      vars:
-        certbot_pip_executable: >-
-          {%- if (
-            (ansible_distribution != 'CentOS')
-            or (ansible_distribution_major_version|int != 7)
-           ) -%}
-            /usr/bin/pip3
-          {%- else -%}
-            {{ omit }}
-          {%- endif -%}
+      tags:
+        - molecule-converge-test

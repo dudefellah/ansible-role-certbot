@@ -1,2 +1,42 @@
 ---
-# vars file for ansible-role-certbot
+# vars file for dudefellah.certbot
+__certbot_packages:
+  AlmaLinux:
+    default:
+      - certbot
+      - cronie
+      - python3-cryptography
+      - python3-pyOpenSSL
+  CentOS:
+    7:
+      - cronie
+      - python-pip
+      - python-cryptography
+      - pyOpenSSL
+    default:
+      - certbot
+      - cronie
+      - python3-pip
+      - python3-cryptography
+      - python3-pyOpenSSL
+  RockyLinux:
+    default:
+      - certbot
+      - cronie
+      - python3-cryptography
+      - python3-pyOpenSSL
+
+__certbot_pip_modules:
+  AlmaLinux:
+    default:
+      - certbot
+  CentOS:
+    7:
+      - certbot
+      - cryptography
+      - pyopenssl
+    default:
+      - certbot
+  RockyLinux:
+    default:
+      - certbot

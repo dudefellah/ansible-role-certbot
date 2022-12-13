@@ -1,6 +1,5 @@
 ---
-# defaults file for ansible-role-certbot
-#
+# defaults file for dudefellah.certbot
 # I don't see a situation where thie would need to be changed, but it's no
 # trouble to use a variable, so it's a variable.
 #
@@ -25,13 +24,18 @@ certbot_email: null
 # set it to empty ([]) to avoid having any packages installed at all.
 certbot_packages: null
 
+# Set to true if you want this role to help you out by installing EPEL first.
+certbot_el_install_epel: false
+
 # Set to configure the pip executable to use when using pip internally
-certbot_pip_executable: null
+certbot_pip_executable: pip3
 
 # If true, the role will install the pip package for certbot. This may be
 # a preferrable option on an older distribution so that you can ensure a
 # more recent version of certbot.
 certbot_pip_install: false
+
+certbot_pip_modules: null
 
 # Pip will attempt to install the specified version of certbot when
 # certbot_source_version is set and certbot_from_source is true.
@@ -58,7 +62,7 @@ certbot_pip_virtualenv_site_packages: false
 # When null or empty, no sysconfig file will be installed. This can
 # be changed to a 'default' path (ie. /etc/default/certbot) on
 # Debian variants that mainly use that path structure over /etc/sysconfig
-certbot_sysconfig_path: /etc/sysconfig/certbot
+certbot_sysconfig_path: null
 
 # Run this hook before grabbing a certificate through this role.
 # Runs in a shell, so it can be any command you'd like to run in that
@@ -70,16 +74,24 @@ certbot_pre_hook: null
 # environment.
 certbot_post_hook: null
 
+# If you set this to true, the play will continue even if the
+# `certbot_pre_hook` action fails.  This might be useful if you're setting up
+# certificates for the first time and you make an attempt to stop the web
+# server before it was installed.
+certbot_pre_hook_ignore_errors: false
+
 # Run this hook only after a successful renewal (unlike certbot_post_hook
 # which runs regardless of whether or not the renewal was successful)
-certbot_deploy_hook: null
+certbot_renew_deploy_hook: null
 
 # Set to true to enable auto-renewal
 certbot_auto_renew_certificates: true
 
 # Set the name of the certbot renewal service name. In case the default
 # package value changes, or it varies between distributions.
-certbot_renew_systemd_name: certbot-renew
+certbot_renew_systemd_name: certbot
+
+certbot_renew_systemd_service_dir: /etc/systemd/system
 
 # Sets the systemd timer OnCalendar value. Default is to run
 # at the beginning of every month.

@@ -1,0 +1,167 @@
+---
+- name: Look for the certificate
+  ansible.builtin.stat:
+    path: >-
+      {{ certbot_etc_dir }}/live/{{ __c_certificate.domains | first }}/cert.pem
+  register: __cert_st
+  tags:
+    - certbot
+
+- name: Ensure other files are also present
+  ansible.builtin.stat:
+    path: >-
+      {{ certbot_etc_dir }}/live/{{ __c_certificate.domains | first }}/\
+      {{ __certbot_certfile }}
+  register: __certbot_certfile_st
+  failed_when: "not __cert_st.stat.exists"
+  loop:
+    - privkey.pem
+    - chain.pem
+  loop_control:
+    loop_var: __certbot_certfile
+  when:
+    - "__cert_st.stat.exists"
+  tags:
+    - certbot
+
+- name: Gather all domains listed in the cert
+  community.crypto.x509_certificate_info:
+    path: >-
+      {{ certbot_etc_dir }}/live/{{ __c_certificate.domains | first }}/cert.pem
+  register: __certbot_certificate_details
+  when:
+    - "__cert_st.stat.exists"
+  tags:
+    - certbot
+
+- name: Create a list of DNS/IP entries from the certificate info
+  ansible.builtin.set_fact:
+    __certbot_existing_names: >
+      {{ __certbot_certificate_details.subject_alt_name
+         | default([])
+         | map('regex_replace', '^DNS:', '')
+         | sort if __cert_st.stat.exists else [] }}
+  tags:
+    - certbot
+
+- name: Retrieve the requested cert on first run
+  block:
+    - name: Perform pre-certificate retrieval hook
+      ansible.builtin.command: "{{ certbot_pre_hook }}"
+      ignore_errors: "{{ certbot_pre_hook_ignore_errors }}"
+      when:
+        - "certbot_pre_hook is not none"
+        - >-
+          (not __certbot_existing_names)
+          or (
+            __certbot_certificate_details.expired or
+            (
+              (__certbot_existing_names | sort)
+                != (__c_certificate.domains |sort )
+            )
+          )
+      tags:
+        - certbot
+
+    - name: >
+        Install the certificate if it doesn't exist
+      ansible.builtin.command: >-
+        {{ _certbot_cmd }} certonly {{ certbot_args | join(" ") }} \
+        --email {{ __c_certificate.email | default(certbot_email) | quote }} \
+        -d {{ __c_certificate.domains | join(',') | quote }}
+      register: __certbot_install_cmd
+      when:
+        - "not __certbot_existing_names"
+      tags:
+        - certbot
+
+    - name: >
+        Renew the certificate if the existing cert domains don't match what we
+        want or the cert is expired
+      ansible.builtin.command: >-
+        {{ _certbot_cmd }} certonly {{ certbot_args | join(" ") }} \
+        --email {{ __c_certificate.email | default(certbot_email) | quote }} \
+        -d {{ __c_certificate.domains | join(',') | quote }} \
+        --renew-with-new-domains --expand
+      register: __certbot_install_cmd
+      when:
+        - "__cert_st.stat.exists"
+        - >
+          __certbot_certificate_details.expired or
+          ((__certbot_existing_names | sort) != (__c_certificate.domains|sort))
+      tags:
+        - certbot
+
+  always:
+    - name: Perform pre-certificate retrieval hook
+      ansible.builtin.command: "{{ certbot_post_hook }}"
+      when:
+        - "certbot_post_hook is not none"
+        - >-
+          (not __certbot_existing_names)
+          or (
+            __certbot_certificate_details.expired or
+            (
+              (__certbot_existing_names | sort)
+                != (__c_certificate.domains | sort)
+            )
+          )
+      tags:
+        - certbot
+
+- name: Gather all domains listed in the updated cert
+  community.crypto.x509_certificate_info:
+    path: >-
+      {{ certbot_etc_dir }}/live/{{ __c_certificate.domains | first }}/cert.pem
+  register: __certbot_updated_details
+  when:
+    - "__certbot_install_cmd is defined"
+    - >-
+        ('skipped' not in __certbot_install_cmd)
+        or (not __certbot_install_cmd.skipped)
+    - "__certbot_install_cmd.rc == 0"
+  tags:
+    - certbot
+
+- name: >-
+    Create a list of DNS/IP entries from the updated certificate for
+    validation
+  ansible.builtin.set_fact:
+    __certbot_updated_names: >
+      {{ __certbot_updated_details.subject_alt_name
+         | default([])
+         | map('regex_replace', '^DNS:', '')
+         | sort }}
+  when:
+    - "__certbot_install_cmd is defined"
+    - >-
+      ('skipped' not in __certbot_install_cmd)
+      or (not __certbot_install_cmd.skipped)
+    - "__certbot_install_cmd.rc == 0"
+  tags:
+    - certbot
+
+- name: Fail if we don't now have what we were looking for
+  ansible.builtin.fail:
+    msg: |
+      It looks like your certificate failed to update. You were looking for the
+      following domains:
+      {{ __c_certificate.domains | join('\n') | indent(2) }}
+      And have:
+      {{ __certbot_existing_names | join('\n') | indent(2) }}
+      With a certificate that {{
+        __certbot_updated_details.expired | ternary(
+          "is", "isn't"
+        )
+      }} expired.
+  when:
+    - "__certbot_install_cmd is defined"
+    - >-
+      ('skipped' not in __certbot_install_cmd)
+      or (not __certbot_install_cmd.skipped)
+    - >-
+      (__certbot_install_cmd.rc != 0)
+      or (__c_certificate.domains != __certbot_existing_names)
+      or (__certbot_updated_details.expired)
+  tags:
+    - certbot

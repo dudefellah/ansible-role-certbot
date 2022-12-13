@@ -1,26 +1,9 @@
 ---
-# handlers file for ansible-role-certbot
-- name: Systemd daemon-reload
-  systemd:
+# handlers file for dudefellah.certbot
+- name: Reload systemd
+  ansible.builtin.systemd:
     daemon_reload: true
-  listen: systemctl daemon-reload
+  listen:
+    - systemctl daemon-reload
   when:
-    - "ansible_service_mgr == 'systemd'"
-
-- name: Enable certbot.timer service with systemd
-  systemd:
-    name: "{{ certbot_renew_systemd_name }}.timer"
-    enabled: true
-    state: started
-  listen: systemctl enable certbot.timer
-  when:
-    - "ansible_service_mgr == 'systemd'"
-
-- name: Disable certbot.timer service with systemd
-  systemd:
-    name: "{{ certbot_renew_systemd_name }}.timer"
-    enabled: false
-    state: stopped
-  listen: systemctl disable certbot.timer
-  when:
-    - "ansible_service_mgr == 'systemd'"
+    - "'molecule-converge-test' not in ansible_run_tags"

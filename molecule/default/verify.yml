@@ -1,9 +1,57 @@
 ---
 # This is an example playbook to execute Ansible tests.
-
 - name: Verify
   hosts: all
+  gather_facts: true
   tasks:
-  - name: Example assertion
-    assert:
-      that: true
+    - name: Get package facts
+      ansible.builtin.package_facts:
+      tags:
+        - molecule-converge-test
+
+    - name: Look for the sysconfig file (RedHat)
+      ansible.builtin.stat:
+        path: "/etc/sysconfig/certbot"
+        checksum_algorithm: sha1
+      register: __certbot_sysconfig_st
+      when:
+        - "ansible_os_family == 'RedHat'"
+      tags:
+        - molecule-converge-test
+
+    # This should be the sha1sum for the default certbot sysconfig
+    # yamllint disable rule:line-length
+    - name: Fail if there's no sysconfig file (RedHat)
+      ansible.builtin.assert:
+        that: >-
+          __certbot_sysconfig_st.stat.exists
+          and (__certbot_sysconfig_st.stat.checksum == 'e95e638a868e127e4b9362be8fd232b49942c3ed')
+        fail_msg: "Installed sysconfig file doesn't match what's expected"
+        success_msg: "Installed sysconfig file is valid"
+      when:
+        - "ansible_os_family == 'RedHat'"
+      tags:
+        - molecule-converge-test
+    # yamllint enable rule:line-length
+
+    - name: Look for the sysconfig file (Debian)
+      ansible.builtin.stat:
+        path: "/etc/default/certbot"
+        checksum_algorithm: sha1
+      register: __certbot_default_st
+      when:
+        - "ansible_os_family == 'Debian'"
+      tags:
+        - molecule-converge-test
+
+    - name: Fail if there's no sysconfig file (Debian)
+      ansible.builtin.assert:
+        that: >-
+          __certbot_default_st.stat.exists
+          and (__certbot_sysconfig_st.stat.checksum == 'abc123')
+        fail_msg: "Installed default file doesn't match what's expected"
+        success_msg: "Installed default file is valid"
+      when:
+        - "ansible_os_family == 'Debian'"
+      tags:
+        - molecule-converge-test
